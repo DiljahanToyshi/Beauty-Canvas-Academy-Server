@@ -30,10 +30,29 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        const usersCollection = client.db('aircncDb').collection('users')
+        const coursesCollection = client.db('BeautyCanvas').collection('courseCollectin')
         const roomsCollection = client.db('aircncDb').collection('rooms')
         const bookingsCollection = client.db('aircncDb').collection('bookings')
 
+
+        app.get('/courses', async (req, res) => {
+            const sort = req.query.sort;
+           
+            const query = {};
+            // const query = { price: {$gte: 50, $lte:150}};
+            // db.InspirationalWomen.find({first_name: { $regex: /Harriet/i} })
+            // const query = { title: { $regex: search, $options: 'i' } }
+            const options = {
+                // sort matched documents in descending order by rating
+                sort: {
+                    "studentNumber": -1
+                }
+
+            };
+            const cursor = coursesCollection.find(query, options);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
         // Send a ping to confirm a successful connection
         await client.db('admin').command({ ping: 1 })
         console.log(
