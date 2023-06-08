@@ -31,28 +31,37 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         const coursesCollection = client.db('BeautyCanvas').collection('courseCollectin')
-        const roomsCollection = client.db('aircncDb').collection('rooms')
+        const cartCollection = client.db('BeautyCanvas').collection('carts')
         const bookingsCollection = client.db('aircncDb').collection('bookings')
 
 
+             app.get('/coursedata', async (req, res) => {
+             const cursor = coursesCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
         app.get('/courses', async (req, res) => {
-            const sort = req.query.sort;
-           
             const query = {};
-            // const query = { price: {$gte: 50, $lte:150}};
-            // db.InspirationalWomen.find({first_name: { $regex: /Harriet/i} })
-            // const query = { title: { $regex: search, $options: 'i' } }
             const options = {
-                // sort matched documents in descending order by rating
+                // sort matched documents in descending order by stundenNumber
                 sort: {
                     "studentNumber": -1
                 }
-
             };
             const cursor = coursesCollection.find(query, options);
             const result = await cursor.toArray();
             res.send(result);
         })
+
+        app.post('/carts', async (req, res) => {
+            const item = req.body;
+            const result = await cartCollection.insertOne(item);
+            res.send(result);
+        })
+
+
+
         // Send a ping to confirm a successful connection
         await client.db('admin').command({ ping: 1 })
         console.log(
