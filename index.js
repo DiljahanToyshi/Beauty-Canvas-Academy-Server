@@ -57,33 +57,44 @@ async function run() {
 
 
         app.patch('/students/admin/:id', async (req, res) => {
-            const id = req.params.id;
-            console.log(id);
-            const filter = { _id: new ObjectId(id) };
-            const updateDoc = {
-                $set: {
-                    role: 'admin'
-                },
-            };
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+                const updateDoc = {
+                    $set: {
+                        role: 'Admin'
+                    }
+                };
 
-            const result = await studentsCollection.updateOne(filter, updateDoc);
-            res.send(result);
+                const result = await studentsCollection.updateOne(filter, updateDoc);
 
-        })
+                res.send(result);
+            } catch (error) {
+                console.log('Error updating user role:', error);
+                res.status(500).json({ error: 'Failed to update user role' });
+            }
+        });
+
         app.patch('/students/instructor/:id', async (req, res) => {
-            const id = req.params.id;
-            console.log(id);
-            const filter = { _id: new ObjectId(id) };
-            const updateDoc = {
-                $set: {
-                    role: 'instructor'
-                },
-            };
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+                const updateDoc = {
+                    $set: {
+                        role: 'Instructor'
+                    }
+                };
 
-            const result = await studentsCollection.updateOne(filter, updateDoc);
-            res.send(result);
+                const result = await studentsCollection.updateOne(filter, updateDoc);
 
-        })
+                res.send(result);
+            } catch (error) {
+                console.log('Error updating user role:', error);
+                res.status(500).json({ error: 'Failed to update user role' });
+            }
+        });
+
+          
 
         // All course related apis
         app.get('/coursedata', async (req, res) => {
