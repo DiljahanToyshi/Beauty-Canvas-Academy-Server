@@ -44,16 +44,46 @@ async function run() {
 
         app.post('/students', async (req, res) => {
             const user = req.body;
-            // const query = { email: user.email }
-            // const existingUser = await usersCollection.findOne(query);
+            const query = { email: user.email }
+            const existingUser = await studentsCollection.findOne(query);
 
-            // if (existingUser) {
-            //     return res.send({ message: 'user already exists' })
-            // }
+            if (existingUser) {
+                return res.send({ message: 'user already exists' })
+            }
 
             const result = await studentsCollection.insertOne(user);
             res.send(result);
         });
+
+
+        app.patch('/students/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                },
+            };
+
+            const result = await studentsCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
+        })
+        app.patch('/students/instructor/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: 'instructor'
+                },
+            };
+
+            const result = await studentsCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
+        })
 
         // All course related apis
         app.get('/coursedata', async (req, res) => {
@@ -95,6 +125,7 @@ async function run() {
 
         app.post('/carts', async (req, res) => {
             const item = req.body;
+          
             const result = await cartCollection.insertOne(item);
             res.send(result);
         })
