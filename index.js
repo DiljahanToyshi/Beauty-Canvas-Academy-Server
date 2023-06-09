@@ -30,13 +30,34 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
+        const studentsCollection = client.db('BeautyCanvas').collection('students')
         const coursesCollection = client.db('BeautyCanvas').collection('courseCollectin')
         const cartCollection = client.db('BeautyCanvas').collection('carts')
         const bookingsCollection = client.db('aircncDb').collection('bookings')
 
 
-             app.get('/coursedata', async (req, res) => {
-             const cursor = coursesCollection.find();
+        // students related apis
+        app.get('/students',  async (req, res) => {
+            const result = await studentsCollection.find().toArray();
+            res.send(result);
+        });
+
+        app.post('/students', async (req, res) => {
+            const user = req.body;
+            // const query = { email: user.email }
+            // const existingUser = await usersCollection.findOne(query);
+
+            // if (existingUser) {
+            //     return res.send({ message: 'user already exists' })
+            // }
+
+            const result = await studentsCollection.insertOne(user);
+            res.send(result);
+        });
+
+        // All course related apis
+        app.get('/coursedata', async (req, res) => {
+            const cursor = coursesCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -95,12 +116,12 @@ async function run() {
 
         // })
 
-          app.delete('/carts/:id', async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await cartCollection.deleteOne(query);
-      res.send(result);
-    })
+        app.delete('/carts/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await cartCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db('admin').command({ ping: 1 })
