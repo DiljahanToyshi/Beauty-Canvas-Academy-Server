@@ -81,6 +81,31 @@ async function run() {
         });
 
 
+        app.get('/git/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+
+            if (req.decoded.email !== email) {
+                res.send({ Admin: false })
+            }
+
+            const query = { email: email }
+            const user = await studentsCollection.findOne(query);
+            const result = { Admin: user?.role === 'Admin' }
+            res.send(result);
+        })
+        app.get('/students/instructor/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+
+            if (req.decoded.email !== email) {
+                res.send({ Instructor: false })
+            }
+
+            const query = { email: email }
+            const user = await studentsCollection.findOne(query);
+            const result = { Instructor: user?.role === 'Instructor' }
+            res.send(result);
+        })
+
         app.patch('/students/admin/:id', async (req, res) => {
             try {
                 const id = req.params.id;
