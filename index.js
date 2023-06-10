@@ -3,6 +3,7 @@ const app = express()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 
 const cors = require('cors')
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const port = process.env.PORT || 5000
 
@@ -14,6 +15,24 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 app.use(express.json())
+
+
+const verifyJWT = (req, res, next) => {
+    const authorization = req.headers.authorization;
+    if (!authorization) {
+        return res.status(401).send({ error: true, message: 'unauthorized access' });
+    }
+    // bearer token
+    const token = authorization.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ error: true, message: 'unauthorized access' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
 
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.mq0mae1.mongodb.net/?retryWrites=true&w=majority`
 
@@ -35,7 +54,13 @@ async function run() {
         const cartCollection = client.db('BeautyCanvas').collection('carts')
         const bookingsCollection = client.db('aircncDb').collection('bookings')
 
+        // jwt token
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
 
+            res.send({ token })
+        })
         // students related apis
         app.get('/students',  async (req, res) => {
             const result = await studentsCollection.find().toArray();
@@ -116,17 +141,92 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/carts', async (req, res) => {
+       
+        // app.get('/api/classes', async (req, res) => {
+        //     try {
+        //         const classes = await db.collection('classes').find().toArray();
+        //         res.json(classes);
+        //     } catch (error) {
+        //         console.log('Error retrieving classes:', error);
+        //         res.status(500).json({ error: 'Failed to retrieve classes' });
+        //     }
+        // });
+       
+
+
+        // Approve class
+        app.patch('/courses/:id/approved', async (req, res) => {
+            try {
+                const { id } = req.params;
+
+                const result = await db
+                    .collection('coursesCollection')
+                    .updateOne({ _id: ObjectId(id) }, { $set: { status: 'approved' } });
+
+                if (result.modifiedCount === 1) {
+                    res.json({ success: true });
+                } else {
+                    res.status(404).json({ error: 'Class not found' });
+                }
+            } catch (error) {
+                console.log('Error approving class:', error);
+                res.status(500).json({ error: 'Failed to approve class' });
+            }
+        });
+
+        // Deny class
+        app.patch('/courses/:id/denied', async (req, res) => {
+            try {
+                const { id } = req.params;
+
+                const result = await db
+                    .collection('coursesCollection')
+                    .updateOne({ _id: ObjectId(id) }, { $set: { status: 'denied' } });
+
+                if (result.modifiedCount === 1) {
+                    res.json({ success: true });
+                } else {
+                    res.status(404).json({ error: 'Class not found' });
+                }
+            } catch (error) {
+                console.log('Error denying class:', error);
+                res.status(500).json({ error: 'Failed to deny class' });
+            }
+        });
+
+        // Send feedback
+        app.patch('/courses/:id/feedback', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const { feedback } = req.body;
+
+                const result = await db
+                    .collection('coursesCollection')
+                    .updateOne({ _id: ObjectId(id) }, { $set: { feedback } });
+
+                if (result.modifiedCount === 1) {
+                    res.json({ success: true });
+                } else {
+                    res.status(404).json({ error: 'Class not found' });
+                }
+            } catch (error) {
+                console.log('Error sending feedback:', error);
+                res.status(500).json({ error: 'Failed to send feedback' });
+            }
+        });
+
+
+        app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
             console.log(email)
             if (!email) {
                 res.send([]);
             }
 
-            // const decodedEmail = req.decoded.email;
-            // if (email !== decodedEmail) {
-            //     return res.status(403).send({ error: true, message: 'forbidden access' })
-            // }
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ error: true, message: 'no access' })
+            }
 
             const query = { email: email };
             const result = await cartCollection.find(query).toArray();
