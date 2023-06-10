@@ -61,8 +61,28 @@ async function run() {
 
             res.send({ token })
         })
+
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await studentsCollection.findOne(query);
+            if (user?.role !== 'Admin') {
+                return res.status(403).send({ error: true, message: 'forbidden message' });
+            }
+            next();
+        }
+        const verifyInstructor = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await studentsCollection.findOne(query);
+            if (user?.role !== 'Instructor') {
+                return res.status(403).send({ error: true, message: 'forbidden message' });
+            }
+            next();
+        }
+
         // students related apis
-        app.get('/students',  async (req, res) => {
+        app.get('/students', verifyJWT, verifyAdmin, verifyInstructor,  async (req, res) => {
             const result = await studentsCollection.find().toArray();
             res.send(result);
         });
@@ -81,7 +101,7 @@ async function run() {
         });
 
 
-        app.get('/git/:email', verifyJWT, async (req, res) => {
+        app.get('/students/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
 
             if (req.decoded.email !== email) {
