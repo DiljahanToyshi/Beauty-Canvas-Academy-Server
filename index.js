@@ -186,13 +186,24 @@ async function run() {
             res.send(result);
         })
 
+       app.get('/courses/:email',async(req,res) =>{
+           const email = req.params.email;
+           console.log(email);
+       
+           const query = { email: email }
+           console.log(query);
+           const result = await coursesCollection.find(query).toArray();
+           res.send(result)
+       })
 
         app.post('/courses', verifyJWT, verifyInstructor, async (req, res) => {
             const newItem = req.body;
-            const result = await coursesCollection.insertOne(newItem)
+            const result = await coursesCollection.insertOne(newItem);
             res.send(result);
         })
 
+
+         
        
         // app.get('/api/classes', async (req, res) => {
         //     try {
