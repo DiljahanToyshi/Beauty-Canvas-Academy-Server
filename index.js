@@ -186,6 +186,13 @@ async function run() {
             res.send(result);
         })
 
+
+        app.post('/courses', verifyJWT, verifyInstructor, async (req, res) => {
+            const newItem = req.body;
+            const result = await coursesCollection.insertOne(newItem)
+            res.send(result);
+        })
+
        
         // app.get('/api/classes', async (req, res) => {
         //     try {
