@@ -82,11 +82,18 @@ async function run() {
         }
 
         // students related apis
-        app.get('/students', verifyJWT, verifyAdmin, verifyInstructor,  async (req, res) => {
+        app.get('/students',  async (req, res) => {
             const result = await studentsCollection.find().toArray();
             res.send(result);
         });
 
+
+         app.get('/students/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email:email }
+            const result = await studentsCollection.findOne(query);
+            res.send(result);
+        });
         app.post('/students', async (req, res) => {
             const user = req.body;
             const query = { email: user.email }
@@ -188,95 +195,41 @@ async function run() {
 
        app.get('/courses/:email',async(req,res) =>{
            const email = req.params.email;
-           console.log(email);
-       
            const query = { email: email }
            console.log(query);
            const result = await coursesCollection.find(query).toArray();
            res.send(result)
        })
 
-        app.post('/courses', verifyJWT, verifyInstructor, async (req, res) => {
+       
+
+        app.post('/courses', verifyJWT, verifyInstructor, verifyAdmin, async (req, res) => {
             const newItem = req.body;
             const result = await coursesCollection.insertOne(newItem);
             res.send(result);
         })
-
-
-         
+  // Approve class
+        app.patch('/courses/:id', async (req, res) => {
+            const id = req.params.id;
+                const filter ={_id: new ObjectId(id)};
+            const updateCourse = req.body;
+            const updateDoc = {
+                $set: {
+                    status: updateCourse.status
+                }
+            };
+            const result = await coursesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+            
+        });
        
-        // app.get('/api/classes', async (req, res) => {
-        //     try {
-        //         const classes = await db.collection('classes').find().toArray();
-        //         res.json(classes);
-        //     } catch (error) {
-        //         console.log('Error retrieving classes:', error);
-        //         res.status(500).json({ error: 'Failed to retrieve classes' });
-        //     }
-        // });
-       
 
-
-        // Approve class
-        app.patch('/courses/:id/approved', async (req, res) => {
-            try {
-                const { id } = req.params;
-
-                const result = await db
-                    .collection('coursesCollection')
-                    .updateOne({ _id: ObjectId(id) }, { $set: { status: 'approved' } });
-
-                if (result.modifiedCount === 1) {
-                    res.json({ success: true });
-                } else {
-                    res.status(404).json({ error: 'Class not found' });
-                }
-            } catch (error) {
-                console.log('Error approving class:', error);
-                res.status(500).json({ error: 'Failed to approve class' });
-            }
-        });
-
-        // Deny class
-        app.patch('/courses/:id/denied', async (req, res) => {
-            try {
-                const { id } = req.params;
-
-                const result = await db
-                    .collection('coursesCollection')
-                    .updateOne({ _id: ObjectId(id) }, { $set: { status: 'denied' } });
-
-                if (result.modifiedCount === 1) {
-                    res.json({ success: true });
-                } else {
-                    res.status(404).json({ error: 'Class not found' });
-                }
-            } catch (error) {
-                console.log('Error denying class:', error);
-                res.status(500).json({ error: 'Failed to deny class' });
-            }
-        });
-
-        // Send feedback
-        app.patch('/courses/:id/feedback', async (req, res) => {
-            try {
-                const { id } = req.params;
-                const { feedback } = req.body;
-
-                const result = await db
-                    .collection('coursesCollection')
-                    .updateOne({ _id: ObjectId(id) }, { $set: { feedback } });
-
-                if (result.modifiedCount === 1) {
-                    res.json({ success: true });
-                } else {
-                    res.status(404).json({ error: 'Class not found' });
-                }
-            } catch (error) {
-                console.log('Error sending feedback:', error);
-                res.status(500).json({ error: 'Failed to send feedback' });
-            }
-        });
+         app.delete('/courses/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+             const result = await coursesCollection.deleteOne(query);
+            res.send(result);
+        })
 
 
         app.get('/carts', verifyJWT, async (req, res) => {
