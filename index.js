@@ -52,6 +52,7 @@ async function run() {
         const studentsCollection = client.db('BeautyCanvas').collection('students')
         const coursesCollection = client.db('BeautyCanvas').collection('courseCollectin')
         const cartCollection = client.db('BeautyCanvas').collection('carts')
+        const paymentCollection = client.db('BeautyCanvas').collection('payments')
 
         // jwt token
         app.post('/jwt', (req, res) => {
@@ -310,12 +311,33 @@ async function run() {
             })
         })
 
+
+         app.get('/payments/:email',verifyJWT,async(req,res) =>{
+           const email = req.params.email;
+           const query = { email: email }
+           const result = await paymentCollection.find(query).toArray();
+           res.send(result)
+       })
+           app.post('/payments', verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+            const query = { _id: new ObjectId(payment.BookedId) }
+      const deleteResult = await cartCollection.deleteOne(query);
+
+      const updateSeats = payment
+
+      res.send({ insertResult, deleteResult });
+    })
+
         app.delete('/carts/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await cartCollection.deleteOne(query);
             res.send(result);
         })
+
+     
+
 
         // Send a ping to confirm a successful connection
         await client.db('admin').command({ ping: 1 })
