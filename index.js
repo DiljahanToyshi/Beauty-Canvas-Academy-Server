@@ -6,6 +6,7 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const port = process.env.PORT || 5000
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 
 // middleware
 const corsOptions = {
@@ -51,7 +52,6 @@ async function run() {
         const studentsCollection = client.db('BeautyCanvas').collection('students')
         const coursesCollection = client.db('BeautyCanvas').collection('courseCollectin')
         const cartCollection = client.db('BeautyCanvas').collection('carts')
-        const bookingsCollection = client.db('aircncDb').collection('bookings')
 
         // jwt token
         app.post('/jwt', (req, res) => {
@@ -292,6 +292,20 @@ async function run() {
         })
 
 
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const { price } = req.body
+            const amount = parseFloat(price) * 100
+            if (!price) return
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card'],
+            })
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            })
+        })
 
         app.delete('/carts/:id', async (req, res) => {
             const id = req.params.id;
