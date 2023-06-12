@@ -34,7 +34,6 @@ const verifyJWT = (req, res, next) => {
     })
 }
 
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.mq0mae1.mongodb.net/?retryWrites=true&w=majority`
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ist6ay7.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -193,17 +192,25 @@ async function run() {
             res.send(result);
         })
 
+       
+
        app.get('/courses/:email',async(req,res) =>{
            const email = req.params.email;
            const query = { email: email }
-           console.log(query);
            const result = await coursesCollection.find(query).toArray();
            res.send(result)
        })
 
+        app.get('/courses/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await coursesCollection.findOne(query)
+
+            res.send(result)
+        })
        
 
-        app.post('/courses', verifyJWT, verifyInstructor, verifyAdmin, async (req, res) => {
+        app.post('/courses', verifyJWT, verifyInstructor, async (req, res) => {
             const newItem = req.body;
             const result = await coursesCollection.insertOne(newItem);
             res.send(result);
@@ -223,6 +230,19 @@ async function run() {
             
         });
        
+        app.put('/courses/:id', verifyJWT, async (req, res) => {
+            const course = req.body
+            console.log(course)
+
+            const filter = { _id: new ObjectId(req.params.id) }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: course,
+            }
+            const result = await coursesCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
+
 
          app.delete('/courses/:id', async (req, res) => {
             const id = req.params.id;
@@ -257,22 +277,21 @@ async function run() {
             res.send(result);
         })
 
-        // app.patch('/carts/status/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const status = req.body.status;
 
-        //     console.log(id);
-        //     const query = { _id: new ObjectId(id) };
-        //     const updateDoc = {
-        //         $set: {
-        //             booked: status,
-        //         },
-        //     };
+        app.patch('/carts/status/:id', async (req, res) => {
+            const id = req.params.id
+            const status = req.body.status
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    booked: status,
+                },
+            }
+            const update = await cartCollection.updateOne(query, updateDoc)
+            res.send(update)
+        })
 
-        //     const result = await cartCollection.updateOne(query, updateDoc);
-        //     res.send(result);
 
-        // })
 
         app.delete('/carts/:id', async (req, res) => {
             const id = req.params.id;
