@@ -312,7 +312,7 @@ async function run() {
         })
 
 
-         app.get('/payments/:email',verifyJWT,async(req,res) =>{
+         app.get('/payments/:email',async(req,res) =>{
            const email = req.params.email;
            const query = { email: email }
            const result = await paymentCollection.find(query).toArray();
@@ -324,7 +324,6 @@ async function run() {
             const query = { _id: new ObjectId(payment.BookedId) }
       const deleteResult = await cartCollection.deleteOne(query);
 
-      const updateSeats = payment
 
       res.send({ insertResult, deleteResult });
     })
