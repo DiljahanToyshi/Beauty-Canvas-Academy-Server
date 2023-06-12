@@ -216,6 +216,19 @@ async function run() {
             const result = await coursesCollection.insertOne(newItem);
             res.send(result);
         })
+
+        app.put('/courses/:id', verifyJWT, verifyInstructor, async (req, res) => {
+            const course = req.body
+            console.log(course)
+
+            const filter = { _id: new ObjectId(req.params.id) }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: course,
+            }
+            const result = await coursesCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
   // Approve class
         app.patch('/courses/:id', async (req, res) => {
             const id = req.params.id;
@@ -244,18 +257,7 @@ async function run() {
       res.send(update)
     })
        
-        app.put('/courses/:id', verifyJWT, async (req, res) => {
-            const course = req.body
-            console.log(course)
-
-            const filter = { _id: new ObjectId(req.params.id) }
-            const options = { upsert: true }
-            const updateDoc = {
-                $set: course,
-            }
-            const result = await coursesCollection.updateOne(filter, updateDoc, options)
-            res.send(result)
-        })
+       
 
 
          app.delete('/courses/:id', async (req, res) => {
