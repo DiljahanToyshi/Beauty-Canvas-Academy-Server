@@ -229,6 +229,19 @@ async function run() {
             res.send(result);
             
         });
+
+           app.patch('/courses/status/:id', async (req, res) => {
+      const id = req.params.id
+      const status = req.body.status
+      const query = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          booked: status,
+        },
+      }
+      const update = await coursesCollection.updateOne(query, updateDoc)
+      res.send(update)
+    })
        
         app.put('/courses/:id', verifyJWT, async (req, res) => {
             const course = req.body
@@ -278,22 +291,12 @@ async function run() {
         })
 
 
-        app.patch('/carts/status/:id', async (req, res) => {
-            const id = req.params.id
-            const status = req.body.status
-            const query = { _id: new ObjectId(id) }
-            const updateDoc = {
-                $set: {
-                    booked: status,
-                },
-            }
-            const update = await cartCollection.updateOne(query, updateDoc)
-            res.send(update)
-        })
+      
 
 
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
             const { price } = req.body
+            
             const amount = parseFloat(price) * 100
             if (!price) return
             const paymentIntent = await stripe.paymentIntents.create({
