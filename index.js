@@ -180,6 +180,33 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/singlecourse/:id', async (req, res) => {
+            
+            const result = await coursesCollection.findOne({ _id: new ObjectId(req.params.id) ,
+            });
+            res.send(result);
+        })
+
+        app.put('/updatesinglecourse/:id',  async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updateDoc = req.body;
+
+            const updateCourse = {
+                $set: {
+                    availableSeats: updateDoc.availableSeats,
+                    price: updateDoc.price,
+                    duration: updateDoc.duration,
+                    CourseName: updateDoc.CourseName,
+                    description: updateDoc.description,
+                    studentNumber: updateDoc.studentNumber,
+                }
+            }
+            const result = await coursesCollection.updateOne(query, updateCourse, option)
+            res.send(result)
+        })
+
         app.get('/courses', async (req, res) => {
             const query = {};
             const options = {
@@ -202,33 +229,13 @@ async function run() {
            res.send(result)
        })
 
-        app.get('/courses/:id', async (req, res) => {
-            const id = req.params.id
-            const query = { _id: new ObjectId(id) }
-            const result = await coursesCollection.findOne(query)
-
-            res.send(result)
-        })
-       
-
         app.post('/courses', verifyJWT, verifyInstructor, async (req, res) => {
             const newItem = req.body;
             const result = await coursesCollection.insertOne(newItem);
             res.send(result);
         })
 
-        app.put('/courses/:id', verifyJWT, verifyInstructor, async (req, res) => {
-            const course = req.body
-            console.log(course)
-
-            const filter = { _id: new ObjectId(req.params.id) }
-            const options = { upsert: true }
-            const updateDoc = {
-                $set: course,
-            }
-            const result = await coursesCollection.updateOne(filter, updateDoc, options)
-            res.send(result)
-        })
+        
   // Approve class
         app.patch('/courses/:id', async (req, res) => {
             const id = req.params.id;
@@ -253,8 +260,8 @@ async function run() {
           booked: status,
         },
       }
-      const update = await coursesCollection.updateOne(query, updateDoc)
-      res.send(update)
+      const updateStatus = await coursesCollection.updateOne(query, updateDoc)
+      res.send(updateStatus)
     })
        
        
@@ -270,7 +277,6 @@ async function run() {
 
         app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
-            console.log(email)
             if (!email) {
                 res.send([]);
             }
